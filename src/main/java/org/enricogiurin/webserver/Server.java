@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 
 @Slf4j
 public class Server {
+    private static final int NUM_THREADS = 100;
     String root;
     int port;
     private ServerSocket server;
@@ -30,7 +31,7 @@ public class Server {
         try {
             server = new ServerSocket(port);
             log.info("Listening for connections on port: " + port);
-            executorService = Executors.newCachedThreadPool();
+            executorService = Executors.newFixedThreadPool(NUM_THREADS);
             while (!executorService.isShutdown() && !executorService.isTerminated()) {
                 Socket socket = server.accept();
                 executorService.execute(new Handler(root, socket));

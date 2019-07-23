@@ -11,9 +11,15 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 
 @Slf4j
 public class Handler implements Runnable {
+    private static final String STATUS_OK = "HTTP/1.1 200 OK";
+    private static final String STATUS_405 = "HTTP/1.1 405 Method Not Allowed";
+    private static final String STATUS_404 = "HTTP/1.1 404 Not Found";
+    private static final String STATUS_403 = "HTTP/1.1 403 Forbidden";
+
     private Socket socket;
     private String root;
 
@@ -28,19 +34,25 @@ public class Handler implements Runnable {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              PrintWriter out = new PrintWriter(socket.getOutputStream());
              BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream())) {
-            HttpRequest httpRequest = new HttpRequest(in.readLine());
-            log.debug(httpRequest.toString());
+            String header = in.readLine();
+            log.info("header: " + header);
+            HttpRequest httpRequest = new HttpRequest(header);
+            log.info(httpRequest.toString());
             if (!httpRequest.isValid()) {
-                out.println("HTTP/1.1 501 Not Implemented");
+                out.println(STATUS_405);
             } else {
                 Path path = Paths.get(root, httpRequest.getUri());
                 log.info("Absolute Path: " + path.toAbsolutePath().toString());
                 if (!Files.exists(path)) {
-                    out.println("HTTP/1.1 404 File Not Found");
+                    out.println(STATUS_404);
                 } else if (Files.isDirectory(path)) {
-                    out.println("HTTP/1.1 403 Forbidden");
+                    out.println(STATUS_403);
                 } else {
-                    out.println("HTTP/1.1 200 OK");
+                    out.println(STATUS_OK);
+                    out.println("Date: " + LocalDateTime.now());
+                    out.println("Content-Type: " + getContentType(path));
+                    out.println("Server: Multithreaded_web-server");
+                    out.println("Content-Length: " + Files.size(path));
                     out.println(); // blank line between headers and content, very important !
                     Files.copy(path, bos);
                 }
@@ -51,13 +63,18 @@ public class Handler implements Runnable {
 
         } catch (IOException e) {
             log.error(e.toString(), e);
-        } finally {
-            try {
-                socket.close(); // we close socket connection
-            } catch (IOException e) {
-                log.error(e.toString(), e);
-            }
         }
+    }
+
+    private static String getContentType(Path path) {
+        String fileName = path.toString();
+        if (fileName.endsWith(".html") || fileName.endsWith(".htm")) {
+            return "text/html";
+        }
+        if (fileName.endsWith(".json")) {
+            return "application/json";
+        }
+        return "text/plain";
     }
 
 }

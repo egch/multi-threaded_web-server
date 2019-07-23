@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import static org.enricogiurin.webserver.RequestMethod.GET;
-import static org.enricogiurin.webserver.RequestMethod.HEAD;
 
 @Getter
 @ToString
@@ -21,9 +20,12 @@ public class HttpRequest {
     private String uri;
     private String version;
 
+    /**
+     * This version only supports GET requests
+     *
+     * @return
+     */
     public boolean isValid() {
-        if (this.method == GET || this.method == HEAD)
-            return true;
-        return false;
+        return this.method==GET;
     }
 }
