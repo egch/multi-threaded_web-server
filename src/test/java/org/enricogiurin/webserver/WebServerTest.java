@@ -13,6 +13,9 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class WebServerTest {
+
+    private static final int SERVER_PORT = 8082;
+
     private Server server;
     private Thread thread;
     private static String root;
@@ -27,12 +30,11 @@ public class WebServerTest {
 
     @Before
     public void setUp() {
-        server = new Server(root, "52052");
+        server = new Server(root, String.valueOf(SERVER_PORT));
         thread = new Thread(server);
         thread.start();
         webClient = new WebClient();
         webClient.setThrowExceptionOnFailingStatusCode(false);
-
     }
 
     @After
@@ -46,21 +48,20 @@ public class WebServerTest {
 
     @Test
     public void shouldGET_OK() throws Exception {
-        Page page = webClient.getPage("http://127.0.0.1:52052/index.html");
+        Page page = webClient.getPage("http://127.0.0.1:" + SERVER_PORT + "/index.html");
         assertThat(page.getWebResponse().getStatusCode()).isEqualTo(200);
         assertThat(page.getWebResponse().getContentType()).isEqualTo("text/html");
-
     }
 
     @Test
     public void shouldGET_404() throws Exception {
-        Page page = webClient.getPage("http://127.0.0.1:52052/notAFile.html");
+        Page page = webClient.getPage("http://127.0.0.1:" + SERVER_PORT + "/notAFile.html");
         assertThat(page.getWebResponse().getStatusCode()).isEqualTo(404);
     }
 
     @Test
     public void shouldGET_403() throws Exception {
-        Page page = webClient.getPage("http://127.0.0.1:52052");
+        Page page = webClient.getPage("http://127.0.0.1:" + SERVER_PORT);
         assertThat(page.getWebResponse().getStatusCode()).isEqualTo(403);
     }
 
