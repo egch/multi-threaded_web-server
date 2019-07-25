@@ -5,11 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Slf4j
-public class Server {
+public class Server implements Runnable {
     private static final int NUM_THREADS = 100;
     String root;
     int port;
@@ -21,24 +22,29 @@ public class Server {
         this.port = Integer.parseInt(port);
     }
 
-
-    public void execute() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    log.warn("shutdown the server");
-                    if (executorService != null) executorService.shutdown();
-                })
-        );
+    @Override
+    public void run() {
         try {
             server = new ServerSocket(port);
             log.info("Listening for connections on port: " + port);
             executorService = Executors.newFixedThreadPool(NUM_THREADS);
-            while (!executorService.isShutdown() && !executorService.isTerminated()) {
+            while (true) {
                 Socket socket = server.accept();
                 executorService.execute(new Handler(root, socket));
             }
+        } catch (SocketException e) {
+            log.error("ServerSocket closed!");
+
         } catch (IOException e) {
             log.error("Error in the server class", e);
         }
     }
 
+    public void shutdown() throws IOException {
+        log.warn("shutdown the server");
+        server.close();
+        if (executorService != null) {
+            executorService.shutdown();
+        }
+    }
 }

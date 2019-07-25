@@ -26,6 +26,6 @@ public class HttpRequest {
      * @return
      */
     public boolean isValid() {
-        return this.method==GET;
+        return this.method == GET;
     }
 }
