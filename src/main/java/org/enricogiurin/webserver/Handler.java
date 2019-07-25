@@ -13,6 +13,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 
+/**
+ * This class is responsible for the client - server communication. *
+ */
 @Slf4j
 public class Handler implements Runnable {
     private static final String STATUS_OK = "HTTP/1.1 200 OK";
@@ -35,14 +38,14 @@ public class Handler implements Runnable {
              PrintWriter out = new PrintWriter(socket.getOutputStream());
              BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream())) {
             String header = in.readLine();
-            log.info("header: " + header);
+            log.debug("header: " + header);
             HttpRequest httpRequest = new HttpRequest(header);
             log.info(httpRequest.toString());
             if (!httpRequest.isValid()) {
                 out.println(STATUS_405);
             } else {
                 Path path = Paths.get(root, httpRequest.getUri());
-                log.info("Absolute Path: " + path.toAbsolutePath().toString());
+                log.debug("Absolute Path: " + path.toAbsolutePath().toString());
                 if (!Files.exists(path)) {
                     out.println(STATUS_404);
                 } else if (Files.isDirectory(path)) {

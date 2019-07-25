@@ -9,6 +9,9 @@ import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * This is the Server class based on {@link ServerSocket}.
+ */
 @Slf4j
 public class Server implements Runnable {
     private static final int NUM_THREADS = 100;
